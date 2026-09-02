@@ -452,9 +452,30 @@ export function deleteShot(id: string): boolean {
   return result.changes > 0;
 }
 
+export function getAllTakes(): Take[] {
+  const db = getDb();
+  return db.prepare("SELECT * FROM takes ORDER BY created_at DESC").all() as Take[];
+}
+
+export function getTakesByProjectId(projectId: string): Take[] {
+  const db = getDb();
+  return db.prepare(`
+    SELECT takes.* FROM takes
+    JOIN shots ON takes.shot_id = shots.id
+    JOIN scenes ON shots.scene_id = scenes.id
+    WHERE scenes.project_id = ?
+    ORDER BY takes.created_at DESC
+  `).all(projectId) as Take[];
+}
+
 export function getTakesByShotId(shotId: string): Take[] {
   const db = getDb();
   return db.prepare("SELECT * FROM takes WHERE shot_id = ? ORDER BY take_number DESC").all(shotId) as Take[];
+}
+
+export function getTakeById(id: string): Take | undefined {
+  const db = getDb();
+  return db.prepare("SELECT * FROM takes WHERE id = ?").get(id) as Take | undefined;
 }
 
 export function createTake(take: Omit<Take, "created_at">): Take {
@@ -474,6 +495,32 @@ export function createTake(take: Omit<Take, "created_at">): Take {
     VALUES (@id, @shot_id, @take_number, @prompt_id, @status, @duration, @resolution, @steps, @seed, @video_path, @audio_path, @thumbnail_path, @metadata, @created_at)
   `).run(fullTake);
   return fullTake;
+}
+
+export function updateTake(
+  id: string,
+  updates: Partial<Omit<Take, "id" | "created_at">>
+): Take | undefined {
+  const db = getDb();
+  const fields: string[] = [];
+  const values: any[] = [];
+
+  for (const [key, val] of Object.entries(updates)) {
+    fields.push(`${key} = ?`);
+    values.push(val);
+  }
+
+  if (fields.length === 0) return getTakeById(id);
+
+  values.push(id);
+  db.prepare(`UPDATE takes SET ${fields.join(", ")} WHERE id = ?`).run(...values);
+  return getTakeById(id);
+}
+
+export function deleteTake(id: string): boolean {
+  const db = getDb();
+  const result = db.prepare("DELETE FROM takes WHERE id = ?").run(id);
+  return result.changes > 0;
 }
 
 export function updateTakeStatus(
@@ -506,6 +553,11 @@ export function getQueueJobs(): QueueJob[] {
   return db.prepare("SELECT * FROM queue_jobs ORDER BY created_at DESC").all() as QueueJob[];
 }
 
+export function getQueueJobById(id: string): QueueJob | undefined {
+  const db = getDb();
+  return db.prepare("SELECT * FROM queue_jobs WHERE id = ?").get(id) as QueueJob | undefined;
+}
+
 export function createQueueJob(job: Omit<QueueJob, "created_at">): QueueJob {
   const db = getDb();
   const now = new Date().toISOString();
@@ -521,6 +573,38 @@ export function createQueueJob(job: Omit<QueueJob, "created_at">): QueueJob {
     VALUES (@id, @take_id, @status, @progress, @current_step, @total_steps, @current_node, @eta_seconds, @created_at)
   `).run(fullJob);
   return fullJob;
+}
+
+export function updateQueueJob(
+  id: string,
+  updates: Partial<Omit<QueueJob, "id" | "created_at">>
+): QueueJob | undefined {
+  const db = getDb();
+  const fields: string[] = [];
+  const values: any[] = [];
+
+  for (const [key, val] of Object.entries(updates)) {
+    fields.push(`${key} = ?`);
+    values.push(val);
+  }
+
+  if (fields.length === 0) return getQueueJobById(id);
+
+  values.push(id);
+  db.prepare(`UPDATE queue_jobs SET ${fields.join(", ")} WHERE id = ?`).run(...values);
+  return getQueueJobById(id);
+}
+
+export function deleteQueueJob(id: string): boolean {
+  const db = getDb();
+  const result = db.prepare("DELETE FROM queue_jobs WHERE id = ?").run(id);
+  return result.changes > 0;
+}
+
+export function clearQueueJobs(): number {
+  const db = getDb();
+  const result = db.prepare("DELETE FROM queue_jobs").run();
+  return result.changes;
 }
 
 export function updateQueueJobProgress(

@@ -87,6 +87,27 @@ export interface QueueJob {
   created_at: string;
 }
 
+export interface TimelineClip {
+  id: string;
+  project_id: string;
+  take_id?: string | null;
+  track_type: "video" | "audio_dialogue" | "audio_foley" | "audio_music";
+  track_index: number;
+  name: string;
+  file_path: string;
+  trim_in: number;
+  trim_out: number;
+  start_time: number;
+  duration: number;
+  volume: number;
+  muted: number; // 0 or 1 in SQLite
+  speed: number;
+  order_index: number;
+  metadata?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export const CREATE_TABLES_SQL = `
 CREATE TABLE IF NOT EXISTS projects (
   id TEXT PRIMARY KEY,
@@ -175,5 +196,26 @@ CREATE TABLE IF NOT EXISTS queue_jobs (
   current_node TEXT,
   eta_seconds REAL,
   created_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS timeline_clips (
+  id TEXT PRIMARY KEY,
+  project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+  take_id TEXT REFERENCES takes(id) ON DELETE SET NULL,
+  track_type TEXT NOT NULL,
+  track_index INTEGER NOT NULL DEFAULT 0,
+  name TEXT NOT NULL,
+  file_path TEXT NOT NULL,
+  trim_in REAL DEFAULT 0.0,
+  trim_out REAL DEFAULT 0.0,
+  start_time REAL DEFAULT 0.0,
+  duration REAL NOT NULL,
+  volume REAL DEFAULT 1.0,
+  muted INTEGER DEFAULT 0,
+  speed REAL DEFAULT 1.0,
+  order_index INTEGER DEFAULT 0,
+  metadata TEXT,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
 );
 `;

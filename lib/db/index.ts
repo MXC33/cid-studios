@@ -10,6 +10,7 @@ import {
   Shot,
   Take,
   QueueJob,
+  TimelineClip,
 } from "./schema";
 
 let dbInstance: Database.Database | null = null;
@@ -624,6 +625,142 @@ export function updateQueueJobProgress(
   values.push(id);
 
   db.prepare(`UPDATE queue_jobs SET ${sets.join(", ")} WHERE id = ?`).run(...values);
+}
+
+// Timeline Clips Data Access
+
+export function getTimelineClips(projectId: string): TimelineClip[] {
+  const db = getDb();
+  return db
+    .prepare(
+      "SELECT * FROM timeline_clips WHERE project_id = ? ORDER BY track_index ASC, order_index ASC, start_time ASC"
+    )
+    .all(projectId) as TimelineClip[];
+}
+
+export function getTimelineClipById(id: string): TimelineClip | undefined {
+  const db = getDb();
+  return db.prepare("SELECT * FROM timeline_clips WHERE id = ?").get(id) as TimelineClip | undefined;
+}
+
+export function addTimelineClip(
+  clip: Omit<TimelineClip, "created_at" | "updated_at">
+): TimelineClip {
+  const db = getDb();
+  const now = new Date().toISOString();
+  const fullClip: TimelineClip = {
+    ...clip,
+    take_id: clip.take_id ?? null,
+    track_index: clip.track_index ?? 0,
+    trim_in: clip.trim_in ?? 0,
+    trim_out: clip.trim_out ?? 0,
+    start_time: clip.start_time ?? 0,
+    duration: clip.duration ?? 0,
+    volume: clip.volume ?? 1.0,
+    muted: clip.muted ?? 0,
+    speed: clip.speed ?? 1.0,
+    order_index: clip.order_index ?? 0,
+    metadata: clip.metadata ?? null,
+    created_at: now,
+    updated_at: now,
+  };
+
+  db.prepare(`
+    INSERT INTO timeline_clips (
+      id, project_id, take_id, track_type, track_index, name, file_path,
+      trim_in, trim_out, start_time, duration, volume, muted, speed,
+      order_index, metadata, created_at, updated_at
+    ) VALUES (
+      @id, @project_id, @take_id, @track_type, @track_index, @name, @file_path,
+      @trim_in, @trim_out, @start_time, @duration, @volume, @muted, @speed,
+      @order_index, @metadata, @created_at, @updated_at
+    )
+  `).run(fullClip);
+
+  return fullClip;
+}
+
+export function saveTimelineClips(
+  projectId: string,
+  clips: Omit<TimelineClip, "created_at" | "updated_at">[]
+): TimelineClip[] {
+  const db = getDb();
+  const now = new Date().toISOString();
+
+  const tx = db.transaction(() => {
+    // Delete existing clips for project
+    db.prepare("DELETE FROM timeline_clips WHERE project_id = ?").run(projectId);
+
+    const insertStmt = db.prepare(`
+      INSERT INTO timeline_clips (
+        id, project_id, take_id, track_type, track_index, name, file_path,
+        trim_in, trim_out, start_time, duration, volume, muted, speed,
+        order_index, metadata, created_at, updated_at
+      ) VALUES (
+        @id, @project_id, @take_id, @track_type, @track_index, @name, @file_path,
+        @trim_in, @trim_out, @start_time, @duration, @volume, @muted, @speed,
+        @order_index, @metadata, @created_at, @updated_at
+      )
+    `);
+
+    for (const c of clips) {
+      insertStmt.run({
+        ...c,
+        project_id: projectId,
+        take_id: c.take_id ?? null,
+        track_index: c.track_index ?? 0,
+        trim_in: c.trim_in ?? 0,
+        trim_out: c.trim_out ?? 0,
+        start_time: c.start_time ?? 0,
+        duration: c.duration ?? 0,
+        volume: c.volume ?? 1.0,
+        muted: c.muted ?? 0,
+        speed: c.speed ?? 1.0,
+        order_index: c.order_index ?? 0,
+        metadata: c.metadata ?? null,
+        created_at: now,
+        updated_at: now,
+      });
+    }
+  });
+
+  tx();
+  return getTimelineClips(projectId);
+}
+
+export function updateTimelineClip(
+  id: string,
+  updates: Partial<Omit<TimelineClip, "id" | "created_at">>
+): TimelineClip | undefined {
+  const db = getDb();
+  const fields: string[] = [];
+  const values: any[] = [];
+  const now = new Date().toISOString();
+
+  const up = { ...updates, updated_at: now };
+
+  for (const [key, val] of Object.entries(up)) {
+    fields.push(`${key} = ?`);
+    values.push(val);
+  }
+
+  if (fields.length === 0) return getTimelineClipById(id);
+
+  values.push(id);
+  db.prepare(`UPDATE timeline_clips SET ${fields.join(", ")} WHERE id = ?`).run(...values);
+  return getTimelineClipById(id);
+}
+
+export function deleteTimelineClip(id: string): boolean {
+  const db = getDb();
+  const result = db.prepare("DELETE FROM timeline_clips WHERE id = ?").run(id);
+  return result.changes > 0;
+}
+
+export function clearTimelineClips(projectId: string): boolean {
+  const db = getDb();
+  const result = db.prepare("DELETE FROM timeline_clips WHERE project_id = ?").run(projectId);
+  return result.changes > 0;
 }
 
 export * from "./schema";

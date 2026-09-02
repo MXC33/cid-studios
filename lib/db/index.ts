@@ -217,9 +217,120 @@ export function getCharactersByProjectId(projectId: string): Character[] {
   return db.prepare("SELECT * FROM characters WHERE project_id = ? ORDER BY created_at ASC").all(projectId) as Character[];
 }
 
+export function getAllCharacters(): Character[] {
+  const db = getDb();
+  return db.prepare("SELECT * FROM characters ORDER BY created_at ASC").all() as Character[];
+}
+
+export function getCharacterById(id: string): Character | undefined {
+  const db = getDb();
+  return db.prepare("SELECT * FROM characters WHERE id = ?").get(id) as Character | undefined;
+}
+
+export function createCharacter(char: Omit<Character, "created_at">): Character {
+  const db = getDb();
+  const now = new Date().toISOString();
+  const fullChar: Character = {
+    ...char,
+    role: char.role ?? null,
+    description: char.description ?? null,
+    voice_profile: char.voice_profile ?? null,
+    ref_sheet_path: char.ref_sheet_path ?? null,
+    ref_body_path: char.ref_body_path ?? null,
+    ref_action_path: char.ref_action_path ?? null,
+    ref_expression_path: char.ref_expression_path ?? null,
+    created_at: now,
+  };
+  db.prepare(`
+    INSERT INTO characters (id, project_id, name, role, description, voice_profile, ref_sheet_path, ref_body_path, ref_action_path, ref_expression_path, created_at)
+    VALUES (@id, @project_id, @name, @role, @description, @voice_profile, @ref_sheet_path, @ref_body_path, @ref_action_path, @ref_expression_path, @created_at)
+  `).run(fullChar);
+  return fullChar;
+}
+
+export function updateCharacter(
+  id: string,
+  updates: Partial<Omit<Character, "id" | "created_at">>
+): Character | undefined {
+  const db = getDb();
+  const fields: string[] = [];
+  const values: any[] = [];
+
+  for (const [key, val] of Object.entries(updates)) {
+    fields.push(`${key} = ?`);
+    values.push(val);
+  }
+
+  if (fields.length === 0) return getCharacterById(id);
+
+  values.push(id);
+  db.prepare(`UPDATE characters SET ${fields.join(", ")} WHERE id = ?`).run(...values);
+  return getCharacterById(id);
+}
+
+export function deleteCharacter(id: string): boolean {
+  const db = getDb();
+  const result = db.prepare("DELETE FROM characters WHERE id = ?").run(id);
+  return result.changes > 0;
+}
+
 export function getLocationsByProjectId(projectId: string): Location[] {
   const db = getDb();
   return db.prepare("SELECT * FROM locations WHERE project_id = ? ORDER BY created_at ASC").all(projectId) as Location[];
+}
+
+export function getAllLocations(): Location[] {
+  const db = getDb();
+  return db.prepare("SELECT * FROM locations ORDER BY created_at ASC").all() as Location[];
+}
+
+export function getLocationById(id: string): Location | undefined {
+  const db = getDb();
+  return db.prepare("SELECT * FROM locations WHERE id = ?").get(id) as Location | undefined;
+}
+
+export function createLocation(loc: Omit<Location, "created_at">): Location {
+  const db = getDb();
+  const now = new Date().toISOString();
+  const fullLoc: Location = {
+    ...loc,
+    description: loc.description ?? null,
+    time_of_day: loc.time_of_day ?? null,
+    ref_main_path: loc.ref_main_path ?? null,
+    ref_alt_path: loc.ref_alt_path ?? null,
+    created_at: now,
+  };
+  db.prepare(`
+    INSERT INTO locations (id, project_id, name, description, time_of_day, ref_main_path, ref_alt_path, created_at)
+    VALUES (@id, @project_id, @name, @description, @time_of_day, @ref_main_path, @ref_alt_path, @created_at)
+  `).run(fullLoc);
+  return fullLoc;
+}
+
+export function updateLocation(
+  id: string,
+  updates: Partial<Omit<Location, "id" | "created_at">>
+): Location | undefined {
+  const db = getDb();
+  const fields: string[] = [];
+  const values: any[] = [];
+
+  for (const [key, val] of Object.entries(updates)) {
+    fields.push(`${key} = ?`);
+    values.push(val);
+  }
+
+  if (fields.length === 0) return getLocationById(id);
+
+  values.push(id);
+  db.prepare(`UPDATE locations SET ${fields.join(", ")} WHERE id = ?`).run(...values);
+  return getLocationById(id);
+}
+
+export function deleteLocation(id: string): boolean {
+  const db = getDb();
+  const result = db.prepare("DELETE FROM locations WHERE id = ?").run(id);
+  return result.changes > 0;
 }
 
 export function getScenesByProjectId(projectId: string): Scene[] {

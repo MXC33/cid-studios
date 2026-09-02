@@ -333,14 +333,123 @@ export function deleteLocation(id: string): boolean {
   return result.changes > 0;
 }
 
+export function getAllScenes(): Scene[] {
+  const db = getDb();
+  return db.prepare("SELECT * FROM scenes ORDER BY scene_number ASC, created_at ASC").all() as Scene[];
+}
+
 export function getScenesByProjectId(projectId: string): Scene[] {
   const db = getDb();
   return db.prepare("SELECT * FROM scenes WHERE project_id = ? ORDER BY scene_number ASC").all(projectId) as Scene[];
 }
 
+export function getSceneById(id: string): Scene | undefined {
+  const db = getDb();
+  return db.prepare("SELECT * FROM scenes WHERE id = ?").get(id) as Scene | undefined;
+}
+
+export function createScene(scene: Omit<Scene, "created_at">): Scene {
+  const db = getDb();
+  const now = new Date().toISOString();
+  const fullScene: Scene = {
+    ...scene,
+    synopsis: scene.synopsis ?? null,
+    prompt_script: scene.prompt_script ?? null,
+    audio_foley: scene.audio_foley ?? null,
+    created_at: now,
+  };
+  db.prepare(`
+    INSERT INTO scenes (id, project_id, scene_number, title, synopsis, prompt_script, audio_foley, created_at)
+    VALUES (@id, @project_id, @scene_number, @title, @synopsis, @prompt_script, @audio_foley, @created_at)
+  `).run(fullScene);
+  return fullScene;
+}
+
+export function updateScene(
+  id: string,
+  updates: Partial<Omit<Scene, "id" | "created_at">>
+): Scene | undefined {
+  const db = getDb();
+  const fields: string[] = [];
+  const values: any[] = [];
+
+  for (const [key, val] of Object.entries(updates)) {
+    fields.push(`${key} = ?`);
+    values.push(val);
+  }
+
+  if (fields.length === 0) return getSceneById(id);
+
+  values.push(id);
+  db.prepare(`UPDATE scenes SET ${fields.join(", ")} WHERE id = ?`).run(...values);
+  return getSceneById(id);
+}
+
+export function deleteScene(id: string): boolean {
+  const db = getDb();
+  const result = db.prepare("DELETE FROM scenes WHERE id = ?").run(id);
+  return result.changes > 0;
+}
+
+export function getAllShots(): Shot[] {
+  const db = getDb();
+  return db.prepare("SELECT * FROM shots ORDER BY shot_number ASC, created_at ASC").all() as Shot[];
+}
+
 export function getShotsBySceneId(sceneId: string): Shot[] {
   const db = getDb();
   return db.prepare("SELECT * FROM shots WHERE scene_id = ? ORDER BY shot_number ASC").all(sceneId) as Shot[];
+}
+
+export function getShotById(id: string): Shot | undefined {
+  const db = getDb();
+  return db.prepare("SELECT * FROM shots WHERE id = ?").get(id) as Shot | undefined;
+}
+
+export function createShot(shot: Omit<Shot, "created_at">): Shot {
+  const db = getDb();
+  const now = new Date().toISOString();
+  const fullShot: Shot = {
+    ...shot,
+    duration: shot.duration ?? 5.0,
+    framing: shot.framing ?? null,
+    camera_movement: shot.camera_movement ?? null,
+    action_notes: shot.action_notes ?? null,
+    character_ids: shot.character_ids ?? null,
+    location_id: shot.location_id ?? null,
+    created_at: now,
+  };
+  db.prepare(`
+    INSERT INTO shots (id, scene_id, shot_number, duration, framing, camera_movement, action_notes, character_ids, location_id, created_at)
+    VALUES (@id, @scene_id, @shot_number, @duration, @framing, @camera_movement, @action_notes, @character_ids, @location_id, @created_at)
+  `).run(fullShot);
+  return fullShot;
+}
+
+export function updateShot(
+  id: string,
+  updates: Partial<Omit<Shot, "id" | "created_at">>
+): Shot | undefined {
+  const db = getDb();
+  const fields: string[] = [];
+  const values: any[] = [];
+
+  for (const [key, val] of Object.entries(updates)) {
+    fields.push(`${key} = ?`);
+    values.push(val);
+  }
+
+  if (fields.length === 0) return getShotById(id);
+
+  values.push(id);
+  db.prepare(`UPDATE shots SET ${fields.join(", ")} WHERE id = ?`).run(...values);
+  return getShotById(id);
+}
+
+export function deleteShot(id: string): boolean {
+  const db = getDb();
+  const result = db.prepare("DELETE FROM shots WHERE id = ?").run(id);
+  return result.changes > 0;
 }
 
 export function getTakesByShotId(shotId: string): Take[] {

@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Users, Plus, Upload, Sparkles, Filter, CheckCircle2 } from "lucide-react";
+import { Plus } from "lucide-react";
 
 export default function CastingPage() {
   return (

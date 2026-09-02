@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { SlidersHorizontal, Play, Download, Scissors, Volume2, Plus, Sparkles } from "lucide-react";
+import { Download, Scissors, Volume2 } from "lucide-react";
 
 export default function TimelinePage() {
   return (

@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Terminal, Shield, FolderCheck, Cpu, Flame, CheckCircle2 } from "lucide-react";
+import { Shield, FolderCheck, Cpu, CheckCircle2 } from "lucide-react";
 
 export function StatusBar() {
   return (

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Film, Play, Star, Check, Sparkles, Filter, SlidersHorizontal, Download } from "lucide-react";
+import { Play, SlidersHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function DailiesPage() {

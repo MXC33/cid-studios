@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { MapPin, Plus, Sun, Moon, Sparkles } from "lucide-react";
+import { Plus, Sun, Moon } from "lucide-react";
 
 export default function LocationsPage() {
   return (

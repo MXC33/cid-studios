@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Layers, Play, Pause, Trash2, ShieldCheck, CheckCircle2, Flame, Clock } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 
 export default function BatchQueuePage() {
   return (

@@ -11,11 +11,10 @@ import {
   SlidersHorizontal, 
   Layers, 
   Activity, 
-  HardDrive,
-  Cpu,
-  Clock,
-  Sparkles,
-  RefreshCw
+  HardDrive, 
+  Cpu, 
+  Clock, 
+  Sparkles 
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -39,7 +38,7 @@ export function Header() {
   const pathname = usePathname();
   const [engineOnline, setEngineOnline] = useState<boolean | null>(true);
   const [currentTime, setCurrentTime] = useState<string>("");
-  const [queueCount, setQueueCount] = useState<number>(0);
+  const [queueCount] = useState<number>(0);
 
   // Studio live timecode clock
   useEffect(() => {

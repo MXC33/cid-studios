@@ -9,26 +9,15 @@ import {
   Film, 
   SlidersHorizontal, 
   Layers, 
-  Sparkles, 
-  Play, 
   Plus, 
   ArrowUpRight, 
   Activity, 
-  Cpu, 
-  HardDrive, 
-  CheckCircle2, 
   Clock, 
-  Sliders, 
-  Video, 
   Flame, 
-  Eye, 
   ChevronRight,
-  ShieldAlert,
   ShieldCheck,
-  Terminal,
-  FileVideo
+  CheckCircle2
 } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 export default function StudioHubPage() {
   return (
@@ -44,7 +33,7 @@ export default function StudioHubPage() {
           </div>
           <h1 className="text-2xl font-mono font-bold tracking-tight text-[#fafafa] flex items-center gap-3">
             <span>NEO_TOKYO_2088</span>
-            <span className="text-[#71717a] font-normal text-lg">//</span>
+            <span className="text-[#71717a] font-normal text-lg">{"//"}</span>
             <span className="text-[#a1a1aa] font-normal text-lg">SCENE 04: THE ROOFTOP EXTRACTION</span>
           </h1>
           <p className="text-xs text-[#a1a1aa] font-mono">

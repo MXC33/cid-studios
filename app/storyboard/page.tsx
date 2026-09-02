@@ -2,16 +2,8 @@
 
 import React, { useState } from "react";
 import { 
-  Clapperboard, 
-  Play, 
   Plus, 
-  Flame, 
-  Layers, 
-  Activity, 
-  Sliders, 
-  CheckCircle2,
-  Sparkles,
-  ArrowRight
+  Flame
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
